@@ -14,7 +14,7 @@
         <div class="sidebar-header"><h2>메뉴</h2></div>
         <ul class="menu-list">
             <li><button id="menu-home" class="menu-btn active">🏠 홈 (게시글 목록)</button></li>
-            <li><button id="menu-stats" class="menu-btn">📊 통계 (카테고리 분석)</button></li>
+            <li><button id="menu-stats" class="menu-btn">📊 통계 (N빵 하실분)</button></li>
         </ul>
     </nav>
 
@@ -64,7 +64,7 @@
     <div class="write-modal" id="write-modal">
         <header class="app-header">
             <button id="close-write-x" class="write-close-btn" aria-label="닫기">X</button>
-            <h1>행사상품 <span>N빵</span> 해요</h1>
+            <h1 id="write-modal-title">행사상품 <span>N빵</span> 해요</h1>
             <p>1+1도 3+1도 사이좋게 나눠먹기!</p>
         </header>
 
@@ -99,7 +99,7 @@
 
             <div class="input-group">
                 <label for="password-write" class="input-label" style="color:var(--accent);">비밀번호</label>
-                <input type="password" id="password-write" class="styled-input" placeholder="거래완료 시 필요 (숫자 4자리)" maxlength="4" inputmode="numeric">
+                <input type="password" id="password-write" class="styled-input" placeholder="숫자 4자리 (본인확인용)" maxlength="4" inputmode="numeric">
             </div>
             
             <div class="content-area-wrapper">
@@ -123,14 +123,16 @@
         <div class="detail-scroll-content" id="detail-scroll-area">
             <div class="detail-top-section">
                 <h1 class="post-detail-title" id="detail-title"></h1>
-                <button id="mark-complete-btn" class="status-btn">거래완료 하기</button>
+                <span id="detail-status-badge" class="status-badge">모집중</span>
+            </div>
+
+            <div class="detail-action-bar">
+                <button id="btn-edit" class="action-btn">수정</button>
+                <button id="btn-delete" class="action-btn delete">삭제</button>
+                <button id="btn-complete" class="action-btn complete">거래완료</button>
             </div>
             
             <div class="detail-metadata">
-                <div class="detail-info-group">
-                    <span>상태</span>
-                    <span id="detail-status" style="font-weight:bold; color:var(--accent);"></span>
-                </div>
                 <div class="detail-info-group">
                     <span>품목</span>
                     <span id="detail-item"></span>

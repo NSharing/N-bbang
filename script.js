@@ -12,16 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeWriteButtonX = document.getElementById('close-write-x');
   const closeWriteButtonUpload = document.getElementById('close-write-upload');
   const writeModal = document.getElementById('write-modal');
+  const writeModalTitle = document.getElementById('write-modal-title');
   
   const detailView = document.getElementById('detail-view');
   const backToListButton = document.getElementById('back-to-list');
   const detailTitle = document.getElementById('detail-title');
+  const detailStatusBadge = document.getElementById('detail-status-badge');
   const detailItem = document.getElementById('detail-item');
   const detailPrice = document.getElementById('detail-price');
   const detailLocation = document.getElementById('detail-location');
   const detailContent = document.getElementById('detail-content');
-  const detailStatus = document.getElementById('detail-status'); // [NEW]
-  const markCompleteBtn = document.getElementById('mark-complete-btn'); // [NEW]
+  
+  const btnEdit = document.getElementById('btn-edit');
+  const btnDelete = document.getElementById('btn-delete');
+  const btnComplete = document.getElementById('btn-complete');
 
   const commentList = document.getElementById('comment-list');
   const commentInputAuthor = document.getElementById('comment-author');
@@ -38,13 +42,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const statsContainer = document.getElementById('stats-container');
   const dashboardGrid = document.getElementById('dashboard-grid');
 
-  // [NEW] 필터 버튼들
   const filterBtns = document.querySelectorAll('.filter-btn');
 
   let allPosts = [];
   let allComments = [];
   let currentPostId = null; 
-  let currentFilter = 'all'; // 현재 선택된 필터
+  let currentFilter = 'all';
+  let isEditing = false;
 
   let messageBox = document.getElementById('message-box');
   if (!messageBox) {
@@ -53,9 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(messageBox);
   }
 
-  // -------------------------------------------------------------
-  // 유틸리티 함수
-  // -------------------------------------------------------------
   function showMessage(text, isError = false, showLoader = false) {
     messageBox.innerHTML = `${showLoader ? '<span class="loading-indicator"></span>' : ''}<span>${text}</span>`;
     messageBox.style.backgroundColor = isError ? 'rgba(255, 60, 60, 0.9)' : 'rgba(0, 0, 0, 0.8)';
@@ -79,61 +80,119 @@ document.addEventListener('DOMContentLoaded', () => {
     if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
   }
 
-  // -------------------------------------------------------------
-  // [NEW] 필터링 로직
-  // -------------------------------------------------------------
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-        // 스타일 업데이트
         filterBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
-        // 필터 적용
         currentFilter = btn.dataset.cat;
-        renderPosts(); // 목록 다시 그리기
+        renderPosts(); 
     });
   });
 
   // -------------------------------------------------------------
-  // [NEW] 상태 변경 (거래완료) 로직
+  // [수정됨] 수정/삭제/완료 버튼 로직
   // -------------------------------------------------------------
-  async function markAsComplete() {
-    const password = prompt("게시글 작성 시 설정한 비밀번호(4자리)를 입력하세요.");
-    if (!password) return;
+  
+  // 1. 수정 버튼: 비밀번호 먼저 확인 후 모달 열기
+  btnEdit.addEventListener('click', async () => {
+      const post = allPosts.find(p => p.timestamp === currentPostId);
+      if (!post) return;
 
-    showMessage('확인 중...', false, true);
-    
-    const payload = {
-        action_type: 'update_status',
-        post_id: currentPostId, // timestamp
-        password: password
-    };
+      const password = prompt("수정하려면 비밀번호(4자리)를 입력하세요.");
+      if (!password) return;
 
-    const formData = new URLSearchParams({ payload: JSON.stringify(payload) });
+      showMessage('비밀번호 확인 중...', false, true);
 
-    try {
-        const response = await fetch(API_URL, { method: 'POST', body: formData });
-        const data = await response.json();
+      // 서버에 비밀번호 확인 요청
+      const payload = {
+          action_type: 'verify_password',
+          post_id: currentPostId,
+          password: password
+      };
+      
+      try {
+          const response = await fetch(API_URL, { 
+              method: 'POST', 
+              body: new URLSearchParams({ payload: JSON.stringify(payload) }) 
+          });
+          const data = await response.json();
 
-        if (data.success) {
-            showMessage('🎉 거래가 완료되었습니다!', false);
-            // UI 즉시 반영
-            document.getElementById('detail-status').textContent = '거래완료';
-            document.getElementById('detail-status').style.color = '#94a3b8';
-            markCompleteBtn.style.display = 'none'; // 버튼 숨기기
-            fetchData(); // 전체 데이터 갱신
-        } else {
-            alert(data.message); // "비밀번호가 틀렸습니다" 등
-            showMessage('❌ 실패: ' + data.message, true);
-        }
-    } catch (e) {
-        showMessage('오류가 발생했습니다.', true);
-    }
+          if (data.success) {
+              // 확인 성공 시 모달 열기
+              showMessage('확인되었습니다.', false); // 짧게 표시
+              
+              isEditing = true;
+              writeModalTitle.innerHTML = "게시글 <span>수정</span>";
+              document.getElementById('close-write-upload').textContent = "수정하기";
+              
+              document.getElementById('post-title-field').value = post.item_name;
+              document.getElementById('item-name-write').value = post.item_type;
+              document.getElementById('price-write').value = post.price;
+              
+              let contentText = post.memo || '';
+              let locationText = '';
+              const locMatch = contentText.match(/^\[장소:\s*(.*?)\]\n?/);
+              if (locMatch) {
+                  locationText = locMatch[1];
+                  contentText = contentText.replace(locMatch[0], '');
+              }
+              document.getElementById('location-write').value = locationText;
+              document.getElementById('post-content-write').value = contentText;
+              
+              // 비밀번호 필드에 확인된 비밀번호 미리 채워주기 (편의성)
+              document.getElementById('password-write').value = password;
+              
+              openWriteModal();
+          } else {
+              showMessage(`❌ ${data.message}`, true);
+          }
+      } catch(e) {
+          showMessage('네트워크 오류가 발생했습니다.', true);
+      }
+  });
+
+  // 2. 삭제 버튼
+  btnDelete.addEventListener('click', async () => {
+      const password = prompt("삭제하려면 게시글 비밀번호(4자리)를 입력하세요.");
+      if (!password) return;
+      if (!confirm("정말 삭제하시겠습니까? 복구할 수 없습니다.")) return;
+
+      showMessage('삭제 중...', false, true);
+      await sendStatusRequest({
+          action_type: 'delete_post',
+          post_id: currentPostId,
+          password: password
+      }, "삭제되었습니다.");
+  });
+
+  // 3. 거래완료 버튼
+  btnComplete.addEventListener('click', async () => {
+      const password = prompt("상태 변경을 위해 비밀번호를 입력하세요.");
+      if (!password) return;
+
+      await sendStatusRequest({
+          action_type: 'update_status',
+          post_id: currentPostId,
+          password: password
+      }, "거래가 완료되었습니다!");
+  });
+
+  async function sendStatusRequest(payload, successMsg) {
+      const formData = new URLSearchParams({ payload: JSON.stringify(payload) });
+      try {
+          const response = await fetch(API_URL, { method: 'POST', body: formData });
+          const data = await response.json();
+          if (data.success) {
+              showMessage(`🎉 ${successMsg}`, false);
+              closeDetailView();
+              fetchData();
+          } else {
+              alert(data.message);
+              showMessage(`❌ 실패: ${data.message}`, true);
+          }
+      } catch (e) { showMessage('오류 발생', true); }
   }
 
-  // -------------------------------------------------------------
-  // 데이터 통신 및 렌더링
-  // -------------------------------------------------------------
   async function fetchData() {
     try {
         const response = await fetch(API_URL);
@@ -142,9 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
         allComments = data.comment || [];
         renderPosts(); 
         if (detailView.classList.contains('is-open') && currentPostId) {
-            // 상세화면이 열려있으면 해당 글 정보를 찾아서 업데이트 (상태 변경 등 반영)
             const post = allPosts.find(p => p.timestamp === currentPostId);
             if (post) openDetailView(post);
+            else closeDetailView();
         }
         if (statsView.classList.contains('is-active')) renderStats();
     } catch (error) { console.error("로딩 오류:", error); }
@@ -152,14 +211,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderPosts() {
     postsContainer.innerHTML = ''; 
-    // 필터링 적용
     let filtered = allPosts;
     if (currentFilter !== 'all') {
         filtered = allPosts.filter(p => p.item_type === currentFilter);
     }
 
     if (filtered.length === 0) {
-        postsContainer.innerHTML = '<p style="text-align:center; color:var(--muted); padding-top:50px;">해당하는 글이 없습니다.</p>';
+        postsContainer.innerHTML = '<p style="text-align:center; color:var(--muted); padding-top:50px;">글이 없습니다.</p>';
         return;
     }
     
@@ -210,16 +268,16 @@ document.addEventListener('DOMContentLoaded', () => {
     detailLocation.textContent = locationText;
     detailContent.textContent = contentText;
     
-    // 상태 표시
-    const statusEl = document.getElementById('detail-status');
-    statusEl.textContent = postData.status || '모집 중';
-    
     if (postData.status === '거래완료') {
-        statusEl.style.color = '#94a3b8'; // 회색
-        markCompleteBtn.style.display = 'none'; // 이미 완료되면 버튼 숨김
+        detailStatusBadge.textContent = '거래완료';
+        detailStatusBadge.style.background = '#e2e8f0';
+        detailStatusBadge.style.color = '#94a3b8';
+        btnComplete.style.display = 'none'; 
     } else {
-        statusEl.style.color = 'var(--accent)';
-        markCompleteBtn.style.display = 'block'; // 모집 중이면 버튼 보임
+        detailStatusBadge.textContent = '모집중';
+        detailStatusBadge.style.background = '#fff0eb';
+        detailStatusBadge.style.color = 'var(--accent)';
+        btnComplete.style.display = 'block'; 
     }
 
     renderComments(currentPostId);
@@ -228,7 +286,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(scrollToBottom, 100);
   }
 
-  // (댓글 렌더링, 전송 등 나머지 함수들은 기존과 동일)
   function renderComments(postId) {
     commentList.innerHTML = '';
     const filteredComments = allComments.filter(c => String(c.post_id) === String(postId));
@@ -278,46 +335,69 @@ document.addEventListener('DOMContentLoaded', () => {
     const priceInput = document.getElementById('price-write');
     const locationInput = document.getElementById('location-write');
     const contentInput = document.getElementById('post-content-write');
-    const passwordInput = document.getElementById('password-write'); // [NEW]
+    const passwordInput = document.getElementById('password-write');
 
     if (!titleInput.value.trim() || !itemInput.value || !passwordInput.value.trim()) { 
         alert("제목, 품목, 비밀번호는 필수입니다."); return; 
     }
 
-    showMessage('게시글 저장 중...', false, true);
+    showMessage('저장 중...', false, true);
     closeWriteButtonUpload.disabled = true;
     const fullMemo = `[장소: ${locationInput.value.trim()}]\n${contentInput.value.trim()}`;
     const cleanPrice = priceInput.value.replace(/[^0-9]/g, '');
-    
+    const actionType = isEditing ? 'update_post' : 'new_post';
     const postData = { 
-        action_type: 'new_post', 
+        action_type: actionType, 
         item_name: titleInput.value.trim(), 
         item_type: itemInput.value, 
         price: parseInt(cleanPrice) || 0, 
         memo: fullMemo, 
         comment_author_id: '익명User',
-        password: passwordInput.value.trim() // [NEW] 비밀번호 전송
+        password: passwordInput.value.trim(),
+        post_id: isEditing ? currentPostId : null
     };
-    
     const formData = new URLSearchParams({ payload: JSON.stringify(postData) });
     try {
         const response = await fetch(API_URL, { method: 'POST', body: formData });
         const data = await response.json();
         if(data.success) {
-            showMessage('✅ 게시글 등록 완료!', false);
+            showMessage(isEditing ? '✅ 수정되었습니다!' : '✅ 등록되었습니다!', false);
             titleInput.value = ''; itemInput.value = ''; priceInput.value = ''; 
             locationInput.value = ''; contentInput.value = ''; passwordInput.value = '';
             closeWriteModal();
             fetchData();
+        } else {
+            alert(data.message);
+            showMessage(`❌ 실패: ${data.message}`, true);
         }
     } catch(e) { showMessage('오류 발생', true); }
     closeWriteButtonUpload.disabled = false;
   }
 
-  // (나머지 뷰 제어 함수들)
   function closeDetailView() { detailView.classList.remove('is-open'); document.body.style.overflow = 'auto'; currentPostId = null; }
-  function openWriteModal() { writeModal.classList.add('is-open'); document.body.style.overflow = 'hidden'; }
-  function closeWriteModal() { writeModal.classList.remove('is-open'); document.body.style.overflow = 'auto'; }
+  
+  function openWriteModal() { 
+      if (!isEditing) {
+          writeModalTitle.innerHTML = "행사상품 <span>N빵</span> 해요";
+          document.getElementById('close-write-upload').textContent = "올리기";
+          document.getElementById('post-title-field').value = '';
+          document.getElementById('item-name-write').value = '';
+          document.getElementById('price-write').value = '';
+          document.getElementById('location-write').value = '';
+          document.getElementById('post-content-write').value = '';
+          document.getElementById('password-write').value = '';
+          document.getElementById('password-write').placeholder = "거래완료 시 필요 (숫자 4자리)";
+      }
+      writeModal.classList.add('is-open'); 
+      document.body.style.overflow = 'hidden'; 
+  }
+  
+  function closeWriteModal() { 
+      writeModal.classList.remove('is-open'); 
+      document.body.style.overflow = 'auto'; 
+      isEditing = false; 
+  }
+  
   function toggleSidebar(show) {
       if (show) { sidebar.classList.add('is-open'); overlay.classList.add('is-open'); } 
       else { sidebar.classList.remove('is-open'); overlay.classList.remove('is-open'); }
@@ -330,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
           statsView.classList.add('is-active'); openWriteButton.classList.add('hidden'); menuStats.classList.add('active'); menuHome.classList.remove('active'); renderStats();
       }
   }
-  function renderStats() { /* (이전 코드와 동일 - 생략 가능하나 전체 코드로 제공함) */
+  function renderStats() {
       const totalPosts = allPosts.length;
       const totalComments = allComments.length;
       const todayStr = new Date().toISOString().split('T')[0];
@@ -351,9 +431,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  // 이벤트 리스너
   fetchData(); setInterval(fetchData, 30000); 
-  openWriteButton.addEventListener('click', openWriteModal);
+  openWriteButton.addEventListener('click', () => { isEditing = false; openWriteModal(); });
   closeWriteButtonX.addEventListener('click', closeWriteModal);
   closeWriteButtonUpload.addEventListener('click', savePost);
   backToListButton.addEventListener('click', closeDetailView);
@@ -363,7 +442,5 @@ document.addEventListener('DOMContentLoaded', () => {
   overlay.addEventListener('click', () => toggleSidebar(false));
   menuHome.addEventListener('click', () => switchTab('home'));
   menuStats.addEventListener('click', () => switchTab('stats'));
-  
-  // [NEW] 상태변경 버튼
   if(markCompleteBtn) markCompleteBtn.addEventListener('click', markAsComplete);
 });

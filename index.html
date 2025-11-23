@@ -9,12 +9,30 @@
 <body>
   <div class="frame">
 
+    <div class="guide-modal-overlay" id="guide-modal-overlay">
+        <div class="guide-modal-content">
+            <h3>🚨 N빵 이용 가이드</h3>
+            <p>이용자 간의 신뢰를 위해</p>
+             <p> 다음 사항을 꼭 지켜주세요!</p>
+            <ul style="text-align: left; padding-left: 20px; font-size: 13px; line-height: 1.6; margin-bottom: 20px;">
+                <li>약속된 거래 시간과 장소를 준수해 주세요.</li>
+                <li>노쇼(No-Show)는 다른 이용자에게 피해를 줍니다.</li>
+                <li> 거래 불참 시 미리 연락해 주세요.</li>
+                <li>거래 완료 후에는 게시글 상태를 '거래완료'로 변경해 주세요.</li>
+            </ul>
+            <button id="close-guide-modal" class="upload-button" style="width: 100%;">확인했습니다</button>
+        </div>
+    </div>
+    
     <div class="overlay" id="overlay"></div>
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header"><h2>메뉴</h2></div>
         <ul class="menu-list">
             <li><button id="menu-home" class="menu-btn active">🏠 홈 (게시글 목록)</button></li>
+            <li><button id="menu-calculator" class="menu-btn">🧮 N빵 계산기</button></li>
             <li><button id="menu-stats" class="menu-btn">📊 통계 (N빵 하실분)</button></li>
+            <li style="border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 10px;"><button id="menu-guide" class="menu-btn">❓ 이용 가이드</button></li>
+            <li><button id="menu-report" class="menu-btn">🚨 신고 / 문의하기</button></li>
         </ul>
     </nav>
 
@@ -24,7 +42,7 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
       </div>
-
+      
       <div class="top-right">
         <button class="more-icon" id="toggle-search-btn" aria-label="검색 열기">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -56,6 +74,38 @@
       <section class="posts"></section>
     </div> 
 
+    <div class="calculator-content" id="calculator-view">
+        <div class="top-left">
+            <button class="more-icon" id="open-menu-btn-calc" aria-label="메뉴 열기">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+        </div>
+        <header class="header">
+            <h1>N빵 <span>계산기</span></h1>
+            <p>총 금액과 인원수를 입력해 주세요</p>
+        </header>
+
+        <div class="calculator-container">
+            <div class="input-group">
+                <label for="total-price" class="input-label">총 금액</label>
+                <input type="number" id="total-price" class="styled-input" placeholder="0" inputmode="numeric">
+                <span style="font-weight: 600; margin-left: 10px;">원</span>
+            </div>
+            <div class="input-group">
+                <label for="total-people" class="input-label">인원수</label>
+                <input type="number" id="total-people" class="styled-input" placeholder="2" inputmode="numeric">
+                <span style="font-weight: 600; margin-left: 10px;">명</span>
+            </div>
+            
+            <button id="calculate-btn" class="upload-button" style="margin-top: 20px;">계산하기</button>
+
+            <div class="result-box">
+                <p class="result-label">1인당 분담 금액</p>
+                <p class="result-value" id="nppang-result">0원</p>
+            </div>
+        </div>
+    </div>
+
     <div class="stats-content" id="stats-view">
         <div class="top-left">
             <button class="more-icon" id="open-menu-btn-stats" aria-label="메뉴 열기">
@@ -66,7 +116,6 @@
             <h1>행사상품 <span>N빵</span> 해요</h1>
             <p>우리가 함께 만든 나눔의 기록</p>
         </header>
-
         <div class="dashboard-grid" id="dashboard-grid"></div>
         <h3 class="section-title">많이 찾는 품목 TOP 5</h3>
         <div class="stats-container" id="stats-container"></div>
@@ -80,13 +129,11 @@
             <h1 id="write-modal-title">행사상품 <span>N빵</span> 해요</h1>
             <p>1+1도 3+1도 사이좋게 나눠먹기!</p>
         </header>
-
         <div class="write-container">
             <div class="input-group input-title-group">
                 <label for="post-title-field" class="title-label-text">제목</label>
                 <input type="text" id="post-title-field" class="input-title-field" placeholder="제목을 입력해주세요">
             </div>
-            
             <div class="input-group">
                 <label for="item-name-write" class="input-label">품목</label>
                 <select id="item-name-write" class="styled-input">
@@ -99,26 +146,21 @@
                     <option value="기타">기타</option>
                 </select>
             </div>
-
             <div class="input-group">
                 <label for="price-write" class="input-label">가격</label>
                 <input type="number" id="price-write" class="styled-input" placeholder="숫자만 입력" inputmode="numeric">
             </div>
-
             <div class="input-group">
                 <label for="location-write" class="input-label">거래장소</label>
                 <input type="text" id="location-write" class="styled-input" placeholder="예: 강남역 1번출구">
             </div>
-
             <div class="input-group">
                 <label for="password-write" class="input-label" style="color:var(--accent);">비밀번호</label>
                 <input type="password" id="password-write" class="styled-input" placeholder="거래완료 시 필요 (숫자 4자리)" maxlength="4" inputmode="numeric">
             </div>
-            
             <div class="content-area-wrapper">
                 <textarea id="post-content-write" class="input-content" placeholder="상세 내용과 희망 분배 방식 등을 적어주세요."></textarea>
             </div>
-
             <div class="upload-button-wrapper">
                 <button class="upload-button" id="close-write-upload">올리기</button>
             </div>

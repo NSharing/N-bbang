@@ -11,9 +11,9 @@
 
     <div class="guide-modal-overlay" id="guide-modal-overlay">
         <div class="guide-modal-content">
-            <h3>🚨 N빵 이용 가이드</h3>
-            <p>이용자 간의 신뢰를 위해</p>
-             <p> 다음 사항을 꼭 지켜주세요!</p>
+            <h3>🚨 이용 가이드</h3>
+            <p>이용자 간의 신뢰를 위해 </p>
+              <p> 다음 사항을 꼭 지켜주세요!</p>
             <ul style="text-align: left; padding-left: 20px; font-size: 13px; line-height: 1.6; margin-bottom: 20px;">
                 <li>약속된 거래 시간과 장소를 준수해 주세요.</li>
                 <li>노쇼(No-Show)는 다른 이용자에게 피해를 줍니다.</li>
@@ -30,7 +30,7 @@
         <ul class="menu-list">
             <li><button id="menu-home" class="menu-btn active">🏠 홈 (게시글 목록)</button></li>
             <li><button id="menu-calculator" class="menu-btn">🧮 N빵 계산기</button></li>
-            <li><button id="menu-stats" class="menu-btn">📊 통계 (N빵 하실분)</button></li>
+            <li><button id="menu-stats" class="menu-btn">📊 통계</button></li>
             <li style="border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 10px;"><button id="menu-guide" class="menu-btn">❓ 이용 가이드</button></li>
             <li><button id="menu-report" class="menu-btn">🚨 신고 / 문의하기</button></li>
         </ul>
@@ -129,11 +129,13 @@
             <h1 id="write-modal-title">행사상품 <span>N빵</span> 해요</h1>
             <p>1+1도 3+1도 사이좋게 나눠먹기!</p>
         </header>
+
         <div class="write-container">
             <div class="input-group input-title-group">
                 <label for="post-title-field" class="title-label-text">제목</label>
                 <input type="text" id="post-title-field" class="input-title-field" placeholder="제목을 입력해주세요">
             </div>
+            
             <div class="input-group">
                 <label for="item-name-write" class="input-label">품목</label>
                 <select id="item-name-write" class="styled-input">
@@ -146,21 +148,45 @@
                     <option value="기타">기타</option>
                 </select>
             </div>
-            <div class="input-group">
-                <label for="price-write" class="input-label">가격</label>
-                <input type="number" id="price-write" class="styled-input" placeholder="숫자만 입력" inputmode="numeric">
+
+            <div class="input-group-column">
+                <div style="display: flex; width: 100%; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <label for="price-write" class="input-label" style="margin:0;">가격</label>
+                    <select id="price-type-select" style="padding: 4px; font-size: 12px; border-radius: 6px; border: 1px solid #ddd;">
+                        <option value="total">총 금액</option>
+                        <option value="per">1인당</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; width: 100%; gap: 8px;">
+                    <input type="number" id="price-write" class="styled-input" placeholder="숫자만 입력" inputmode="numeric">
+                    <button id="toggle-mini-calc" class="calc-btn">🧮 계산</button>
+                </div>
+
+                <div id="mini-calc-area" class="mini-calc-box">
+                    <div class="mini-calc-row">
+                        <input type="number" id="mc-total" placeholder="총 금액" class="mc-input">
+                        <span>÷</span>
+                        <input type="number" id="mc-people" placeholder="인원" class="mc-input">
+                    </div>
+                    <button id="mc-apply-btn" class="mc-btn">계산 및 적용</button>
+                </div>
             </div>
+
             <div class="input-group">
                 <label for="location-write" class="input-label">거래장소</label>
                 <input type="text" id="location-write" class="styled-input" placeholder="예: 강남역 1번출구">
             </div>
+
             <div class="input-group">
                 <label for="password-write" class="input-label" style="color:var(--accent);">비밀번호</label>
                 <input type="password" id="password-write" class="styled-input" placeholder="거래완료 시 필요 (숫자 4자리)" maxlength="4" inputmode="numeric">
             </div>
+            
             <div class="content-area-wrapper">
                 <textarea id="post-content-write" class="input-content" placeholder="상세 내용과 희망 분배 방식 등을 적어주세요."></textarea>
             </div>
+
             <div class="upload-button-wrapper">
                 <button class="upload-button" id="close-write-upload">올리기</button>
             </div>

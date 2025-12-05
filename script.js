@@ -54,7 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleSearchBtn = document.getElementById('toggle-search-btn'); 
   const searchArea = document.getElementById('search-area'); 
 
-  // [NEW] 미니 계산기 및 가격 옵션
+  // [NEW] 마감 시간 및 계산기 요소
+  const deadlineWriteInput = document.getElementById('deadline-write');
+  const deadlineMinusBtn = document.getElementById('deadline-minus');
+  const deadlinePlusBtn = document.getElementById('deadline-plus');
   const toggleMiniCalcBtn = document.getElementById('toggle-mini-calc');
   const miniCalcArea = document.getElementById('mini-calc-area');
   const mcTotal = document.getElementById('mc-total');
@@ -62,12 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const mcApplyBtn = document.getElementById('mc-apply-btn');
   const priceTypeSelect = document.getElementById('price-type-select');
   const priceInput = document.getElementById('price-write');
-
-  // 가이드 팝업
   const guideModalOverlay = document.getElementById('guide-modal-overlay');
   const closeGuideModalBtn = document.getElementById('close-guide-modal');
-
-  // 메인 계산기
   const totalPriceInput = document.getElementById('total-price');
   const totalPeopleInput = document.getElementById('total-people');
   const calculateBtn = document.getElementById('calculate-btn');
@@ -108,32 +107,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const scrollArea = document.getElementById('detail-scroll-area');
     if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
   }
-
+  
   // -------------------------------------------------------------
-  // [NEW] 미니 계산기 로직
+  // [NEW] 마감 시간 계산 및 Stepper 로직
   // -------------------------------------------------------------
-  if (toggleMiniCalcBtn) {
-      toggleMiniCalcBtn.addEventListener('click', () => {
-          miniCalcArea.classList.toggle('visible');
-      });
-  }
+  function getDeadlineStatus(post) {
+      const deadlineMinutes = parseInt(post.deadline_minutes) || 0;
+      if (post.status === '거래완료') return '';
+      if (deadlineMinutes === 0) return ''; 
 
-  if (mcApplyBtn) {
-      mcApplyBtn.addEventListener('click', () => {
-          const total = parseInt(mcTotal.value) || 0;
-          const people = parseInt(mcPeople.value) || 0;
-          if (people > 0) {
-              const result = Math.ceil(total / people);
-              priceInput.value = result; 
-              priceTypeSelect.value = 'per'; // 자동으로 1인당 선택
-              miniCalcArea.classList.remove('visible');
-          } else {
-              alert("인원 수를 입력해주세요.");
-          }
-      });
-  }
+      const postTime = new Date(post.timestamp).getTime();
+      const deadlineTime = postTime + deadlineMinutes * 60 * 1000;
+      const remaining = deadlineTime - new Date().getTime();
 
-  // 가이드 팝업
+      if (remaining <= 0) {
+          return `<span style="color:red; font-weight:600;">| 마감</span>`;
+      } else {
+          const remainingMinutes = Math.ceil(remaining / (60 * 1000));
+          return `<span style="color:#1a73e8; font-weight:600;">| ${remainingMinutes}분 남음</span>`;
+      }
+  }
+  
+  // Stepper 로직
+  function changeDeadline(amount) {
+      if (!deadlineWriteInput) return;
+      let currentValue = parseInt(deadlineWriteInput.value) || 0;
+      currentValue += amount;
+      if (currentValue < 0) currentValue = 0;
+      deadlineWriteInput.value = currentValue;
+  }
+  if(deadlineMinusBtn) deadlineMinusBtn.addEventListener('click', () => changeDeadline(-5));
+  if(deadlinePlusBtn) deadlinePlusBtn.addEventListener('click', () => changeDeadline(5));
+  
+  // [NEW] 미니 계산기 및 가이드 로직 (이전 코드 유지)
   function checkFirstVisitAndShowGuide() {
       if (!localStorage.getItem('nsharing_first_visit')) {
           if(guideModalOverlay) guideModalOverlay.classList.add('is-visible');
@@ -145,8 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
           if(guideModalOverlay) guideModalOverlay.classList.remove('is-visible');
       });
   }
-
-  // 메인 계산기
   function calculateNppang() {
       const price = parseInt(totalPriceInput.value.replace(/[^0-9]/g, '')) || 0;
       const people = parseInt(totalPeopleInput.value) || 0;
@@ -158,6 +162,22 @@ document.addEventListener('DOMContentLoaded', () => {
   if(calculateBtn) calculateBtn.addEventListener('click', calculateNppang);
   if(totalPriceInput) totalPriceInput.addEventListener('input', calculateNppang);
   if(totalPeopleInput) totalPeopleInput.addEventListener('input', calculateNppang);
+  if (toggleMiniCalcBtn) {
+      toggleMiniCalcBtn.addEventListener('click', () => { miniCalcArea.classList.toggle('visible'); });
+  }
+  if (mcApplyBtn) {
+      mcApplyBtn.addEventListener('click', () => {
+          const total = parseInt(mcTotal.value) || 0;
+          const people = parseInt(mcPeople.value) || 0;
+          if (people > 0) {
+              const result = Math.ceil(total / people);
+              priceInput.value = result; 
+              priceTypeSelect.value = 'per'; 
+              miniCalcArea.classList.remove('visible');
+          } else { alert("인원 수를 입력해주세요."); }
+      });
+  }
+
 
   // 탭 전환
   function switchTab(tabName) {
@@ -186,12 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (tabName === 'guide') {
           if(guideModalOverlay) guideModalOverlay.classList.add('is-visible');
       } else if (tabName === 'report') {
-          // 신고 링크
           window.open('https://forms.gle/oRumRc4oCRiEMCqq6', '_blank'); 
       }
   }
 
-  // 검색
   if(toggleSearchBtn) {
       toggleSearchBtn.addEventListener('click', () => {
           if(searchArea) {
@@ -200,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
       });
   }
-
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         filterBtns.forEach(b => b.classList.remove('active'));
@@ -209,77 +226,11 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPosts(); 
     });
   });
-
   if(searchInput) searchInput.addEventListener('input', () => { renderPosts(); });
 
-  // 수정/삭제/완료 로직
-  if(btnEdit) btnEdit.addEventListener('click', async () => {
-      const post = allPosts.find(p => p.timestamp === currentPostId);
-      if (!post) return;
-      const password = prompt("수정하려면 비밀번호(4자리)를 입력하세요.");
-      if (!password) return;
-      showMessage('비밀번호 확인 중...', false, true);
-      const payload = { action_type: 'verify_password', post_id: currentPostId, password: password };
-      try {
-          const response = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ payload: JSON.stringify(payload) }) });
-          const data = await response.json();
-          if (data.success) {
-              showMessage('확인되었습니다.', false);
-              isEditing = true;
-              writeModalTitle.innerHTML = "게시글 <span>수정</span>";
-              document.getElementById('close-write-upload').textContent = "수정하기";
-              
-              // 제목에서 [1인당] 태그 제거 후 표시
-              let cleanTitle = post.item_name;
-              if (cleanTitle.startsWith('[1인당]')) {
-                  cleanTitle = cleanTitle.replace(/^\[1인당\]\s*/, '');
-                  priceTypeSelect.value = 'per';
-              } else {
-                  priceTypeSelect.value = 'total';
-              }
-              document.getElementById('post-title-field').value = cleanTitle;
-              
-              document.getElementById('item-name-write').value = post.item_type;
-              document.getElementById('price-write').value = post.price;
-              let contentText = post.memo || '';
-              let locationText = '';
-              const locMatch = contentText.match(/^\[장소:\s*(.*?)\]\n?/);
-              if (locMatch) { locationText = locMatch[1]; contentText = contentText.replace(locMatch[0], ''); }
-              document.getElementById('location-write').value = locationText;
-              document.getElementById('post-content-write').value = contentText;
-              document.getElementById('password-write').value = password;
-              openWriteModal();
-          } else { showMessage(`❌ ${data.message}`, true); }
-      } catch(e) { showMessage('오류 발생', true); }
-  });
-
-  if(btnDelete) btnDelete.addEventListener('click', async () => {
-      const password = prompt("삭제하려면 게시글 비밀번호(4자리)를 입력하세요.");
-      if (!password) return;
-      if (!confirm("정말 삭제하시겠습니까?")) return;
-      showMessage('삭제 중...', false, true);
-      await sendStatusRequest({ action_type: 'delete_post', post_id: currentPostId, password: password }, "삭제되었습니다.");
-  });
-
-  if(btnComplete) btnComplete.addEventListener('click', async () => {
-      const password = prompt("상태 변경을 위해 비밀번호를 입력하세요.");
-      if (!password) return;
-      await sendStatusRequest({ action_type: 'update_status', post_id: currentPostId, password: password }, "거래가 완료되었습니다!");
-  });
-
-  async function sendStatusRequest(payload, successMsg) {
-      const formData = new URLSearchParams({ payload: JSON.stringify(payload) });
-      try {
-          const response = await fetch(API_URL, { method: 'POST', body: formData });
-          const data = await response.json();
-          if (data.success) {
-              showMessage(`🎉 ${successMsg}`, false);
-              closeDetailView();
-              fetchData();
-          } else { alert(data.message); showMessage(`❌ 실패: ${data.message}`, true); }
-      } catch (e) { showMessage('오류 발생', true); }
-  }
-
+  // -------------------------------------------------------------
+  // 데이터 통신 및 렌더링
+  // -------------------------------------------------------------
   async function fetchData() {
     try {
         const response = await fetch(API_URL);
@@ -315,10 +266,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const previewText = (rawMemo || '').substring(0, 40) + ((rawMemo || '').length > 40 ? '...' : '');
         const commentCount = allComments.filter(c => String(c.post_id) === String(post.timestamp)).length;
         const isCompleted = post.status === '거래완료';
+        
+        const deadlineStatus = getDeadlineStatus(post); 
+        
         const postElement = document.createElement('article');
         postElement.className = `post ${isCompleted ? 'completed' : ''}`;
         postElement.addEventListener('click', () => openDetailView(post));
-        postElement.innerHTML = `<div class="post-row"><div><h2 class="title">${title} ${isCompleted ? '<span style="font-size:10px;color:#999;">(완료)</span>' : ''}</h2><p class="preview" style="color:#555;">${itemType} · ${price}</p><p class="preview">${previewText}</p><p class="post-time">${relativeTime}</p></div><div class="comment-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6436" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"/></svg><span class="comment-count">${commentCount}</span></div></div>`;
+        
+        postElement.innerHTML = `<div class="post-row"><div><h2 class="title">${title} ${isCompleted ? '<span style="font-size:10px;color:#999;">(완료)</span>' : ''}</h2><p class="preview" style="color:#555;">${itemType} · ${price} ${deadlineStatus}</p><p class="preview">${previewText}</p><p class="post-time">${relativeTime}</p></div><div class="comment-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6436" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"/></svg><span class="comment-count">${commentCount}</span></div></div>`;
         postsContainer.appendChild(postElement);
     });
   }
@@ -327,6 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
     currentPostId = postData.timestamp; 
     let contentText = postData.memo || '';
     let locationText = '장소 미정';
+    const deadlineMinutes = postData.deadline_minutes || 0;
+
     const locMatch = contentText.match(/^\[장소:\s*(.*?)\]\n?/);
     if (locMatch) { locationText = locMatch[1]; contentText = contentText.replace(locMatch[0], ''); }
     if(detailTitle) detailTitle.textContent = postData.item_name;
@@ -335,13 +292,31 @@ document.addEventListener('DOMContentLoaded', () => {
     if(detailLocation) detailLocation.textContent = locationText;
     if(detailContent) detailContent.textContent = contentText;
     
+    // 상태 표시 업데이트
+    let statusText = postData.status || '모집중';
+    if (deadlineMinutes > 0 && postData.status !== '거래완료') {
+        const remainingMinutes = Math.ceil((new Date(postData.timestamp).getTime() + deadlineMinutes * 60 * 1000 - new Date().getTime()) / (60 * 1000));
+        
+        if (remainingMinutes <= 0) {
+            if(detailStatusBadge) detailStatusBadge.textContent = '마감됨';
+            if(detailStatusBadge) detailStatusBadge.style.background = '#e2e8f0';
+        } else {
+            if(detailStatusBadge) detailStatusBadge.textContent = `${statusText} (${remainingMinutes}분 남음)`;
+            if(detailStatusBadge) detailStatusBadge.style.background = '#fff0eb';
+        }
+    } else {
+        if(detailStatusBadge) detailStatusBadge.textContent = statusText;
+        if(detailStatusBadge) detailStatusBadge.style.background = postData.status === '거래완료' ? '#e2e8f0' : '#fff0eb';
+    }
+    
     if (postData.status === '거래완료') {
-        if(detailStatusBadge) { detailStatusBadge.textContent = '거래완료'; detailStatusBadge.style.background = '#e2e8f0'; detailStatusBadge.style.color = '#94a3b8'; }
+        if(detailStatusBadge) detailStatusBadge.style.color = '#94a3b8';
         if(btnComplete) btnComplete.style.display = 'none'; 
     } else {
-        if(detailStatusBadge) { detailStatusBadge.textContent = '모집중'; detailStatusBadge.style.background = '#fff0eb'; detailStatusBadge.style.color = 'var(--accent)'; }
+        if(detailStatusBadge) detailStatusBadge.style.color = 'var(--accent)';
         if(btnComplete) btnComplete.style.display = 'block'; 
     }
+
     renderComments(currentPostId);
     if(detailView) detailView.classList.add('is-open');
     document.body.style.overflow = 'hidden';
@@ -393,7 +368,6 @@ document.addEventListener('DOMContentLoaded', () => {
     finally { if(commentSubmitButton) commentSubmitButton.disabled = false; if(commentSubmitButton) commentSubmitButton.style.opacity = '1'; }
   }
 
-  // [수정됨] 저장 로직 (가격 태그 붙이기)
   async function savePost() {
     const titleInput = document.getElementById('post-title-field');
     const itemInput = document.getElementById('item-name-write');
@@ -416,7 +390,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const fullMemo = `[장소: ${locationInput.value.trim()}]\n${contentInput.value.trim()}`;
     const cleanPrice = priceInput.value.replace(/[^0-9]/g, '');
     const actionType = isEditing ? 'update_post' : 'new_post';
-    const postData = { action_type: actionType, item_name: finalTitle, item_type: itemInput.value, price: parseInt(cleanPrice) || 0, memo: fullMemo, comment_author_id: '익명User', password: passwordInput.value.trim(), post_id: isEditing ? currentPostId : null };
+    const postData = { 
+        action_type: actionType, 
+        item_name: finalTitle, 
+        item_type: itemInput.value, 
+        price: parseInt(cleanPrice) || 0, 
+        memo: fullMemo, 
+        comment_author_id: '익명User', 
+        password: passwordInput.value.trim(), 
+        post_id: isEditing ? currentPostId : null,
+        deadline_minutes: parseInt(deadlineWriteInput.value) || 0
+    };
     const formData = new URLSearchParams({ payload: JSON.stringify(postData) });
     try {
         const response = await fetch(API_URL, { method: 'POST', body: formData });
@@ -424,9 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(data.success) {
             showMessage(isEditing ? '✅ 수정되었습니다!' : '✅ 등록되었습니다!', false);
             titleInput.value = ''; itemInput.value = ''; priceInput.value = ''; locationInput.value = ''; contentInput.value = ''; passwordInput.value = '';
-            mcTotal.value = ''; mcPeople.value = '';
-            priceTypeSelect.value = 'total'; 
-            miniCalcArea.classList.remove('visible');
             closeWriteModal();
             fetchData();
         } else { alert(data.message); showMessage(`❌ 실패: ${data.message}`, true); }
@@ -451,11 +432,19 @@ document.addEventListener('DOMContentLoaded', () => {
           if(document.getElementById('password-write')) document.getElementById('password-write').value = '';
           if(document.getElementById('password-write')) document.getElementById('password-write').placeholder = "거래완료 시 필요 (숫자 4자리)";
           if(priceTypeSelect) priceTypeSelect.value = 'total';
+          if(deadlineWriteInput) deadlineWriteInput.value = '0';
+          if(mcTotal) mcTotal.value = '';
+          if(mcPeople) mcPeople.value = '';
+          if(miniCalcArea) miniCalcArea.classList.remove('visible');
       }
       if(writeModal) writeModal.classList.add('is-open'); 
       document.body.style.overflow = 'hidden'; 
   }
-  function closeWriteModal() { writeModal.classList.remove('is-open'); document.body.style.overflow = 'auto'; isEditing = false; }
+  function closeWriteModal() { 
+      if(writeModal) writeModal.classList.remove('is-open'); 
+      document.body.style.overflow = 'auto'; 
+      isEditing = false; 
+  }
   
   function toggleSidebar(show) {
       if(sidebar) { sidebar.classList.toggle('is-open', show); overlay.classList.toggle('is-open', show); }
@@ -503,5 +492,63 @@ document.addEventListener('DOMContentLoaded', () => {
   if(menuGuide) menuGuide.addEventListener('click', () => switchTab('guide'));
   if(menuReport) menuReport.addEventListener('click', () => switchTab('report'));
 
-  if(markCompleteBtn) markCompleteBtn.addEventListener('click', markAsComplete);
+  if(document.getElementById('open-menu-btn-calc')) document.getElementById('open-menu-btn-calc').addEventListener('click', () => toggleSidebar(true));
+  
+  if(btnEdit) btnEdit.addEventListener('click', async () => {
+      const post = allPosts.find(p => p.timestamp === currentPostId);
+      if (!post) return;
+      const password = prompt("수정하려면 비밀번호(4자리)를 입력하세요.");
+      if (!password) return;
+      showMessage('비밀번호 확인 중...', false, true);
+      const payload = { action_type: 'verify_password', post_id: currentPostId, password: password };
+      try {
+          const response = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ payload: JSON.stringify(payload) }) });
+          const data = await response.json();
+          if (data.success) {
+              showMessage('확인되었습니다.', false);
+              isEditing = true;
+              writeModalTitle.innerHTML = "게시글 <span>수정</span>";
+              document.getElementById('close-write-upload').textContent = "수정하기";
+              
+              // 제목 처리 (1인당 태그 분리)
+              let cleanTitle = post.item_name;
+              if (cleanTitle.startsWith('[1인당]')) {
+                  cleanTitle = cleanTitle.replace(/^\[1인당\]\s*/, '');
+                  if(priceTypeSelect) priceTypeSelect.value = 'per';
+              } else {
+                  if(priceTypeSelect) priceTypeSelect.value = 'total';
+              }
+              document.getElementById('post-title-field').value = cleanTitle;
+              
+              if(document.getElementById('item-name-write')) document.getElementById('item-name-write').value = post.item_type;
+              if(document.getElementById('price-write')) document.getElementById('price-write').value = post.price;
+              
+              let contentText = post.memo || '';
+              let locationText = '';
+              const locMatch = contentText.match(/^\[장소:\s*(.*?)\]\n?/);
+              if (locMatch) { locationText = locMatch[1]; contentText = contentText.replace(locMatch[0], ''); }
+              if(document.getElementById('location-write')) document.getElementById('location-write').value = locationText;
+              if(document.getElementById('post-content-write')) document.getElementById('post-content-write').value = contentText;
+              
+              if(document.getElementById('password-write')) document.getElementById('password-write').value = password;
+              if(deadlineWriteInput) deadlineWriteInput.value = post.deadline_minutes || '0'; // [NEW] 마감 시간 채우기
+              
+              openWriteModal();
+          } else { showMessage(`❌ ${data.message}`, true); }
+      } catch(e) { showMessage('오류 발생', true); }
+  });
+
+  if(btnDelete) btnDelete.addEventListener('click', async () => {
+      const password = prompt("삭제하려면 게시글 비밀번호(4자리)를 입력하세요.");
+      if (!password) return;
+      if (!confirm("정말 삭제하시겠습니까?")) return;
+      showMessage('삭제 중...', false, true);
+      await sendStatusRequest({ action_type: 'delete_post', post_id: currentPostId, password: password }, "삭제되었습니다.");
+  });
+
+  if(btnComplete) btnComplete.addEventListener('click', async () => {
+      const password = prompt("상태 변경을 위해 비밀번호를 입력하세요.");
+      if (!password) return;
+      await sendStatusRequest({ action_type: 'update_status', post_id: currentPostId, password: password }, "거래가 완료되었습니다!");
+  });
 });

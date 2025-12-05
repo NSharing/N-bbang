@@ -11,14 +11,12 @@
 
     <div class="guide-modal-overlay" id="guide-modal-overlay">
         <div class="guide-modal-content">
-            <h3>🚨 이용 가이드</h3>
-            <p>이용자 간의 신뢰를 위해 </p>
-              <p> 다음 사항을 꼭 지켜주세요!</p>
+            <h3>🚨 N빵 이용 가이드</h3>
+            <p>이용자 간의 신뢰를 위해 다음 사항을 꼭 지켜주세요!</p>
             <ul style="text-align: left; padding-left: 20px; font-size: 13px; line-height: 1.6; margin-bottom: 20px;">
                 <li>약속된 거래 시간과 장소를 준수해 주세요.</li>
-                <li>노쇼(No-Show)는 다른 이용자에게 피해를 줍니다.</li>
-                <li> 거래 불참 시 미리 연락해 주세요.</li>
-                <li>거래 완료 후에는 게시글 상태를 '거래완료'로 변경해 주세요.</li>
+                <li>노쇼(No-Show)는 피해를 줍니다. 불참 시 미리 연락해 주세요.</li>
+                <li>거래 완료 후에는 상태를 '거래완료'로 변경해 주세요.</li>
             </ul>
             <button id="close-guide-modal" class="upload-button" style="width: 100%;">확인했습니다</button>
         </div>
@@ -30,7 +28,7 @@
         <ul class="menu-list">
             <li><button id="menu-home" class="menu-btn active">🏠 홈 (게시글 목록)</button></li>
             <li><button id="menu-calculator" class="menu-btn">🧮 N빵 계산기</button></li>
-            <li><button id="menu-stats" class="menu-btn">📊 통계</button></li>
+            <li><button id="menu-stats" class="menu-btn">📊 통계 (N빵 하실분)</button></li>
             <li style="border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 10px;"><button id="menu-guide" class="menu-btn">❓ 이용 가이드</button></li>
             <li><button id="menu-report" class="menu-btn">🚨 신고 / 문의하기</button></li>
         </ul>
@@ -42,25 +40,21 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
       </div>
-      
       <div class="top-right">
         <button class="more-icon" id="toggle-search-btn" aria-label="검색 열기">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
       </div>
-  
       <header class="header">
         <h1>행사상품 <span>N빵</span> 해요</h1>
         <p>1+1도 3+1도 사이좋게 나눠먹기!</p>
       </header>
-
       <div class="search-box-wrapper" id="search-area">
           <div class="search-box">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               <input type="text" id="search-input" placeholder="상품명, 장소 검색...">
           </div>
       </div>
-  
       <div class="category-filter">
           <button class="filter-btn active" data-cat="all">전체</button>
           <button class="filter-btn" data-cat="음료/커피">음료/커피</button>
@@ -70,7 +64,6 @@
           <button class="filter-btn" data-cat="문구류">문구류</button>
           <button class="filter-btn" data-cat="기타">기타</button>
       </div>
-
       <section class="posts"></section>
     </div> 
 
@@ -84,7 +77,6 @@
             <h1>N빵 <span>계산기</span></h1>
             <p>총 금액과 인원수를 입력해 주세요</p>
         </header>
-
         <div class="calculator-container">
             <div class="input-group">
                 <label for="total-price" class="input-label">총 금액</label>
@@ -96,9 +88,7 @@
                 <input type="number" id="total-people" class="styled-input" placeholder="2" inputmode="numeric">
                 <span style="font-weight: 600; margin-left: 10px;">명</span>
             </div>
-            
             <button id="calculate-btn" class="upload-button" style="margin-top: 20px;">계산하기</button>
-
             <div class="result-box">
                 <p class="result-label">1인당 분담 금액</p>
                 <p class="result-value" id="nppang-result">0원</p>
@@ -129,13 +119,11 @@
             <h1 id="write-modal-title">행사상품 <span>N빵</span> 해요</h1>
             <p>1+1도 3+1도 사이좋게 나눠먹기!</p>
         </header>
-
         <div class="write-container">
             <div class="input-group input-title-group">
                 <label for="post-title-field" class="title-label-text">제목</label>
                 <input type="text" id="post-title-field" class="input-title-field" placeholder="제목을 입력해주세요">
             </div>
-            
             <div class="input-group">
                 <label for="item-name-write" class="input-label">품목</label>
                 <select id="item-name-write" class="styled-input">
@@ -157,12 +145,10 @@
                         <option value="per">1인당</option>
                     </select>
                 </div>
-                
                 <div style="display: flex; width: 100%; gap: 8px;">
                     <input type="number" id="price-write" class="styled-input" placeholder="숫자만 입력" inputmode="numeric">
                     <button id="toggle-mini-calc" class="calc-btn">🧮 계산</button>
                 </div>
-
                 <div id="mini-calc-area" class="mini-calc-box">
                     <div class="mini-calc-row">
                         <input type="number" id="mc-total" placeholder="총 금액" class="mc-input">
@@ -172,21 +158,28 @@
                     <button id="mc-apply-btn" class="mc-btn">계산 및 적용</button>
                 </div>
             </div>
+            
+            <div class="input-group">
+                <label for="deadline-write" class="input-label" style="color: #64748b;">응답 마감</label>
+                <div class="stepper-container">
+                    <button type="button" class="stepper-btn minus" id="deadline-minus">-</button>
+                    <input type="number" id="deadline-write" class="deadline-input" placeholder="0" min="0" value="0" inputmode="numeric" readonly>
+                    <button type="button" class="stepper-btn plus" id="deadline-plus">+</button>
+                </div>
+                <span style="font-weight: 600; margin-left: 10px;">분</span>
+            </div>
 
             <div class="input-group">
                 <label for="location-write" class="input-label">거래장소</label>
                 <input type="text" id="location-write" class="styled-input" placeholder="예: 강남역 1번출구">
             </div>
-
             <div class="input-group">
                 <label for="password-write" class="input-label" style="color:var(--accent);">비밀번호</label>
-                <input type="password" id="password-write" class="styled-input" placeholder="거래완료 시 필요 (숫자 4자리)" maxlength="4" inputmode="numeric">
+                <input type="password" id="password-write" class="styled-input" placeholder="숫자 4자리 (본인인증용)" maxlength="4" inputmode="numeric">
             </div>
-            
             <div class="content-area-wrapper">
                 <textarea id="post-content-write" class="input-content" placeholder="상세 내용과 희망 분배 방식 등을 적어주세요."></textarea>
             </div>
-
             <div class="upload-button-wrapper">
                 <button class="upload-button" id="close-write-upload">올리기</button>
             </div>
@@ -200,19 +193,16 @@
             </button>
             <h2>게시글 상세</h2>
         </header>
-        
         <div class="detail-scroll-content" id="detail-scroll-area">
             <div class="detail-top-section">
                 <h1 class="post-detail-title" id="detail-title"></h1>
                 <span id="detail-status-badge" class="status-badge">모집중</span>
             </div>
-
             <div class="detail-action-bar">
                 <button id="btn-edit" class="action-btn">수정</button>
                 <button id="btn-delete" class="action-btn delete">삭제</button>
                 <button id="btn-complete" class="action-btn complete">거래완료</button>
             </div>
-            
             <div class="detail-metadata">
                 <div class="detail-info-group">
                     <span>품목</span>
@@ -227,15 +217,12 @@
                     <span id="detail-location"></span>
                 </div>
             </div>
-            
             <div class="detail-content" id="detail-content"></div>
-            
             <section class="comment-section">
                 <h3 class="comment-title">댓글</h3>
                 <div class="comment-list" id="comment-list"></div>
             </section>
         </div>
-        
         <div class="comment-input-sticky">
             <div class="comment-input-row">
                 <input type="text" id="comment-author" placeholder="이름" class="input-mini">
